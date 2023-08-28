@@ -1,5 +1,6 @@
 # CNCF conformance for `Qbo` Cloud
 
+# Run conformance tests from `Qbo` web console
 # Requirements
 > * Chrome or Firefox browser
 > * Email authenticated by Google (Google Account)
@@ -43,7 +44,7 @@ Select version and run conformance test. Example:
 ```bash
 ./conformance run v1.28.0
 ```
-# Get results
+# Get test results
 ```bash
 cat /tmp/qbo/sonobuoy/v1.28.0/qbo/e2e.log | grep Pass
 ```
