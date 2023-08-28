@@ -128,7 +128,7 @@ if [ -z $QBO_VERSION ]; then
     exit 1;
 fi
 
-exit 0
+#exit 0
 # BEGIN run conformance
 pei "$SONOBUOY run --mode=certified-conformance --wait"
 # END run conformance
@@ -157,7 +157,8 @@ type: distribution
 description: "Qbo is a pure containerized Kubernetes distribution delivering metal performance with zero virtualization. It brings a faster and simplified cloud experience for anyone, anywhere."
 EOF
 
-cat ../README.md > ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/README.md
+cd -
+cat README.md > ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/README.md
 # END docs
 
 pei "cat ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/e2e.log | grep Pass"
