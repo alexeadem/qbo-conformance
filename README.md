@@ -45,7 +45,7 @@ Select version and run conformance test. Example:
 ```bash
 ./conformance run v1.28.0
 ```
-Get results
+# Get results
 ```bash
 cat /tmp/qbo/sonobuoy/v1.28.0/qbo/e2e.log | grep Pass
 ```
