@@ -16,34 +16,34 @@ https://console.cloud.qbo.io:9601
 
 # Run conformance test
 
-> Conformance test are run with `qbot`. `qbot` is a typing bot that will type the commands for you. Alternatevely you can type the command yourself in the shell.
+> Conformance test are run with `conformance`. `conformance` is a typing bot that will type the commands for you. Alternatevely you can type the command yourself in the shell.
 
 
-`qbot` will perform the following tasks:
+`conformance` will perform the following tasks:
 * Create a `qbo` cluster
 * Configure `kubectl`
 * Download and configure `sonobuoy` 
 * Run confomance test on the version entered.
 
-`qbot` usage:
+Usage:
 
 ```bash
-./qbot help
->>> ./qbot help                 -- Show usage
->>> ./qbot list                 -- List available Kubernetes image tags
->>> ./qbot conformance {tag}    -- Run CNCF conformance results for qbo
+./conformance help
+>>> ./conformance help                 -- Show usage
+>>> ./conformance list                 -- List available Kubernetes image tags
+>>> ./conformance run {tag}    -- Run CNCF conformance results for qbo
 ```
 
 List available Kubernetes tags:
 
 ```bash
-./qbot list
+./conformance list
 ```
 
 
 Select version and run conformance test. Example: 
 ```bash
-./qbot conformance v1.28.0
+./conformance run v1.28.0
 ```
 Get results
 ```bash

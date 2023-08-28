@@ -157,61 +157,7 @@ type: distribution
 description: "Qbo is a pure containerized Kubernetes distribution delivering metal performance with zero virtualization. It brings a faster and simplified cloud experience for anyone, anywhere."
 EOF
 
-cat << 'EOF' > ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/README.md
-# CNCF conformance results with `qbo` Cloud
-
-# Requirements
-> * Chrome or Firefox browser
-> * Email authenticated by Google (Google Account)
-
-# Request access to `Qbo` Cloud
-
-> Email `support@qbo.io` and provide a google email in your request that you'll use to authenticate in Qbo Cloud.
-
-# Login to the `Qbo` console
-
-> Once you receive an email confirmation you can login to:
-
-https://console.cloud.qbo.io:9601
-
-# Run conformance test
-
-> Conformance test are run with `qbot`. `qbot` is a typing bot that will type the commands for you. Alternatevely you can type the command yourself in the shell.
-
-
-`qbot` will perform the following tasks:
-* Create a `qbo` cluster
-* Configure `kubectl`
-* Download and configure `sonobuoy` 
-* Run confomance test on the version entered.
-
-`qbot` usage:
-
-```bash
-./conformance help
->>> ./conformance help                 -- Show usage
->>> ./conformance list                -- List available Kubernetes image tags
->>> ./conformance run {tag}    -- Run CNCF conformance results for qbo
-```
-
-List available Kubernetes tags:
-
-```bash
-./conformance list
-```
-
-
-Select version and run conformance test. Example: 
-```bash
-./conformance run v1.28.0
-```
-Get results
-```bash
-cat /tmp/qbo/sonobuoy/v1.28.0/qbo/e2e.log | grep Pass
-```
-> For more information visit: https://docs.qbo.io/
-EOF
-
+cat ../README.md > ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/README.md
 # END docs
 
 pei "cat ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/e2e.log | grep Pass"
