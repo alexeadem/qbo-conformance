@@ -1,4 +1,6 @@
-# CNCF conformance results with `qbo` Cloud
+# CNCF conformance for `Qbo`
+
+# Qbo Cloud
 
 # Requirements
 > * Chrome or Firefox browser
