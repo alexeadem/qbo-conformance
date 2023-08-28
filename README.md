@@ -18,7 +18,7 @@ https://console.cloud.qbo.io:9601
 
 # Run conformance test
 
-> Conformance test are run with `conformance`. `conformance` is a typing bot that will type the commands for you. Alternatevely you can type the command yourself in the shell.
+> Conformance tests are run with `conformance`. It uses a typing bot that will type the commands for you. Alternatively you can type the command yourself in the shell
 
 
 `conformance` will perform the following tasks:
@@ -41,8 +41,6 @@ List available Kubernetes tags:
 ```bash
 ./conformance list
 ```
-
-
 Select version and run conformance test. Example: 
 ```bash
 ./conformance run v1.28.0
@@ -52,4 +50,3 @@ Get results
 cat /tmp/qbo/sonobuoy/v1.28.0/qbo/e2e.log | grep Pass
 ```
 > For more information visit: https://docs.qbo.io/
-EOF
