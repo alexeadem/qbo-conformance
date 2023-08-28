@@ -1,0 +1,218 @@
+#!/bin/bash
+
+shopt -s expand_aliases
+. ./qbot.sh
+
+# sonobuoy binary path
+SONOBUOY=/tmp/qbo/sonobuoy/sonobuoy
+SONOBUOY_DIR=/tmp/qbo/sonobuoy/
+PROD_NAME=qbo
+OUTPUT_DIR=/tmp/qbo/sonobuoy
+
+DEMO_PROMPT="\e[0;38;5;231;48;5;31;1m\] qbot \e[0;38;5;31;48;22m\]\e[0m "
+
+REPO=hub.docker.com/kindest/node
+#alias qbo=cli
+color=31
+usage() {
+	echo -e "\033[1;38;5;${color}m>>>\033[0m $0 \033[1;38;5;${color}mhelp\033[0m                 -- Show usage"
+	echo -e "\033[1;38;5;${color}m>>>\033[0m $0 \033[1;38;5;${color}mlist\033[0m                 -- List available Kubernetes image tags"
+    	echo -e "\033[1;38;5;${color}m>>>\033[0m $0 \033[1;38;5;${color}mconformance {tag}\033[0m    -- Run CNCF conformance results for qbo"
+	exit 1;
+}
+
+if [ "$1" = "list" ]; then
+	pei "qbo get images -A | jq -r .images[]?.tag"
+	exit 0
+elif [ "$1" = "conformance" ]; then
+	shift $((OPTIND))
+elif [ "$1" = "help" ]; then
+	usage
+fi
+
+if [ -f /.dockerenv ]; then
+	alias qbo=cli
+else
+	alias qbo="docker run --rm --name qbo-cli --network host -i -v ~/.qbo:/tmp/qbo registry.eadem.com/alex/qbo-src/qbo-cli:latest valgrind --leak-check=full  cli"
+fi
+
+# BEGIN dir
+if [ ! -d $SONOBUOY_DIR ]; then 
+       mkdir -p $SONOBUOY_DIR
+fi
+# END dir
+
+# BEGIN check tag
+TAGS=$(qbo get images -A | jq -r .images[]?.tag)
+
+match=0
+TAG="v1.28.0"
+for i in $TAGS; do
+	#echo $i
+	if [ "$i" = "$1" ]; then
+		match=1
+		TAG=$i
+	fi
+done
+
+if [ $match = 0 ]; then
+
+	echo "Not Found -- tag $1"
+	usage
+fi
+
+DEMO_PROMPT="\e[0;38;5;231;48;5;31;1m qbot \e[0;38;5;31;48;5;236;22m \e[0;38;5;250;48;5;236mconformance \e[0;38;5;236;48;5;226m\e[226;38;5;0;48;5;11m $TAG \e[0;38;5;245;48;5;240;22m\e[0;38;5;226;49;22m \e[0m"
+
+NAME=$(echo $TAG | sed 's/[^a-zA-Z0-9 ]/_/g')
+#echo $NAME
+# END check tag
+
+# BEGIN qbo cluster
+pei "qbo add cluster $NAME -i hub.docker.com/kindest/node:$TAG | jq"
+# END qbo cluster
+
+
+# BEGIN kubeconfig
+pei "qbo version | jq .version[]?"
+pei "qbo get nodes $NAME | jq '.nodes[]?'"
+pei "qbo get cluster $NAME -k | jq -r '.output[]?.kubeconfig | select( . != null)' > /tmp/qbo/$NAME.cfg"
+pei "export KUBECONFIG=/tmp/qbo/$NAME.cfg"
+pei "kubectl get nodes"
+# END kubeconfig
+exit 0
+# BEGIN sonobuoy git
+#if [ ! -d $SONOBUOY_DIR ]; then 
+#	pei "git clone https://github.com/vmware-tanzu/sonobuoy.git"
+#	cd $SONOBUOY_DIR
+#else 
+#	pei "cd $SONOBUOY_DIR"
+#	pei "git config pull.rebase false"
+#	pei "git pull"
+#fi
+# END sonobuoy git
+
+
+cd $SONOBUOY_DIR
+# BEGIN sonobuoy bin
+
+if [ -f "$SONOBUOY" ] && [ -x :"$SONOBUOY" ]; then 
+	pei "$SONOBUOY version --kubeconfig /tmp/qbo/$NAME.cfg"
+else
+	pei "curl -O -L  https://github.com/vmware-tanzu/sonobuoy/releases/download/v0.56.16/sonobuoy_0.56.16_linux_amd64.tar.gz"
+	pei "tar -xvzf sonobuoy_0.56.16_linux_amd64.tar.gz"
+	pei "$SONOBUOY version --kubeconfig /tmp/qbo/$NAME.cfg"
+fi
+# END sonobuoy bin
+
+
+# BEGIN backup previous results
+if [ -d results ]; then
+    mv results results-`date +%Y%m%d%H%M%S`
+fi
+# END backup previous results
+
+K8S_VERSION=$(kubectl version -o json  | jq -r .serverVersion.gitVersion | cut -d '.' -f 1-2)
+echo "K8S_VERSION=$K8S_VERSION"
+
+if [ -z $K8S_VERSION ]; then
+
+    echo "Unable to get kubectl version"
+    exit 1;
+fi
+
+QBO_VERSION=$(qbo version | jq -r '.version[]?.qbo_api')
+echo "QBO_VERSION=$QBO_VERSION"
+if [ -z $QBO_VERSION ]; then
+
+    echo "Unable to get qbo version"
+    exit 1;
+fi
+
+# BEGIN run conformance
+pei "$SONOBUOY run --mode=certified-conformance --wait"
+# END run conformance
+
+
+# BEGIN results
+OUTFILE=$($SONOBUOY retrieve)
+pei "mkdir ./results; tar xzf $OUTFILE -C ./results"
+
+if [ ! -d  ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/ ]; then
+    pei "mkdir -p ./${K8S_VERSION}/${PROD_NAME}"
+fi
+pei "cp ./results/plugins/e2e/results/global/* ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/"
+# END results
+
+# BEGIN docs
+cat << EOF > ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/PRODUCT.yaml
+vendor: QBO LLC
+name: $PROD_NAME cloud
+version: $QBO_VERSION
+website_url: https://www.qbo.io
+repo_url: https://github.com/alexeadem/qbo-home
+documentation_url: https://docs.qbo.io
+product_logo_url: https://raw.githubusercontent.com/alexeadem/qbo-home/master/qbo_250x150.svg
+type: distribution
+description: "Qbo is a pure containerized Kubernetes distribution delivering metal performance with zero virtualization. It brings a faster and simplified cloud experience for anyone, anywhere."
+EOF
+
+cat << 'EOF' > ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/README.md
+# CNCF conformance results with `qbo` Cloud
+
+# Requirements
+> * Chrome or Firefox browser
+> * Email authenticated by Google (Google Account)
+
+# Request access to `Qbo` Cloud
+
+> Email `support@qbo.io` and provide a google email in your request that you'll use to authenticate in Qbo Cloud.
+
+# Login to the `Qbo` console
+
+> Once you receive an email confirmation you can login to:
+
+https://console.cloud.qbo.io:9601
+
+# Run conformance test
+
+> Conformance test are run with `qbot`. `qbot` is a typing bot that will type the commands for you. Alternatevely you can type the command yourself in the shell.
+
+
+`qbot` will perform the following tasks:
+* Create a `qbo` cluster
+* Configure `kubectl`
+* Download and configure `sonobuoy` 
+* Run confomance test on the version entered.
+
+`qbot` usage:
+
+```bash
+./qbot help
+>>> ./qbot help                 -- Show usage
+>>> ./qbot list                 -- List available Kubernetes image tags
+>>> ./qbot conformance {tag}    -- Run CNCF conformance results for qbo
+```
+
+List available Kubernetes tags:
+
+```bash
+/sonobuoy.sh list
+```
+
+
+Select version and run conformance test. Example: 
+```bash
+qbot conformance v1.28.0
+```
+Get results
+```bash
+cat /tmp/qbo/sonobuoy/v1.28.0/qbo/e2e.log | grep Pass
+```
+> For more information visit: https://docs.qbo.io/
+EOF
+
+# END docs
+
+pei "cat ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/e2e.log | grep Pass"
+
+p ""
