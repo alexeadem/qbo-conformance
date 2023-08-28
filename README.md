@@ -37,13 +37,13 @@ https://console.cloud.qbo.io:9601
 List available Kubernetes tags:
 
 ```bash
-/sonobuoy.sh list
+./qbot list
 ```
 
 
 Select version and run conformance test. Example: 
 ```bash
-qbot conformance v1.28.0
+./qbot conformance v1.28.0
 ```
 Get results
 ```bash

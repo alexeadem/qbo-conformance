@@ -1,7 +1,7 @@
 #!/bin/bash
 
 shopt -s expand_aliases
-. ./qbot.sh
+. ../qbot.sh
 
 # sonobuoy binary path
 SONOBUOY=/tmp/qbo/sonobuoy/sonobuoy
@@ -15,16 +15,16 @@ REPO=hub.docker.com/kindest/node
 #alias qbo=cli
 color=31
 usage() {
-	echo -e "\033[1;38;5;${color}m>>>\033[0m $0 \033[1;38;5;${color}mhelp\033[0m                 -- Show usage"
-	echo -e "\033[1;38;5;${color}m>>>\033[0m $0 \033[1;38;5;${color}mlist\033[0m                 -- List available Kubernetes image tags"
-    	echo -e "\033[1;38;5;${color}m>>>\033[0m $0 \033[1;38;5;${color}mconformance {tag}\033[0m    -- Run CNCF conformance results for qbo"
+	echo -e "\033[1;38;5;${color}m>>>\033[0m $0 \033[1;38;5;${color}mhelp\033[0m         -- Show usage"
+	echo -e "\033[1;38;5;${color}m>>>\033[0m $0 \033[1;38;5;${color}mlist\033[0m         -- List available Kubernetes image tags"
+    	echo -e "\033[1;38;5;${color}m>>>\033[0m $0 \033[1;38;5;${color}mrun {tag}\033[0m    -- Run CNCF conformance results for qbo"
 	exit 1;
 }
 
 if [ "$1" = "list" ]; then
 	pei "qbo get images -A | jq -r .images[]?.tag"
 	exit 0
-elif [ "$1" = "conformance" ]; then
+elif [ "$1" = "run" ]; then
 	shift $((OPTIND))
 elif [ "$1" = "help" ]; then
 	usage
@@ -79,7 +79,7 @@ pei "qbo get cluster $NAME -k | jq -r '.output[]?.kubeconfig | select( . != null
 pei "export KUBECONFIG=/tmp/qbo/$NAME.cfg"
 pei "kubectl get nodes"
 # END kubeconfig
-exit 0
+#exit 0
 # BEGIN sonobuoy git
 #if [ ! -d $SONOBUOY_DIR ]; then 
 #	pei "git clone https://github.com/vmware-tanzu/sonobuoy.git"
@@ -128,6 +128,7 @@ if [ -z $QBO_VERSION ]; then
     exit 1;
 fi
 
+exit 0
 # BEGIN run conformance
 pei "$SONOBUOY run --mode=certified-conformance --wait"
 # END run conformance
@@ -187,22 +188,22 @@ https://console.cloud.qbo.io:9601
 `qbot` usage:
 
 ```bash
-./qbot help
->>> ./qbot help                 -- Show usage
->>> ./qbot list                 -- List available Kubernetes image tags
->>> ./qbot conformance {tag}    -- Run CNCF conformance results for qbo
+./conformance help
+>>> ./conformance help                 -- Show usage
+>>> ./conformance list                -- List available Kubernetes image tags
+>>> ./conformance run {tag}    -- Run CNCF conformance results for qbo
 ```
 
 List available Kubernetes tags:
 
 ```bash
-/sonobuoy.sh list
+./conformance list
 ```
 
 
 Select version and run conformance test. Example: 
 ```bash
-qbot conformance v1.28.0
+./conformance run v1.28.0
 ```
 Get results
 ```bash
