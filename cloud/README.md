@@ -14,7 +14,7 @@
 ---
 > Once you receive an email confirmation you can login to:
 
-https://console.cloud.qbo.io:9601
+https://console.cloud.qbo.io
 
 ### Run conformance test
 ---
