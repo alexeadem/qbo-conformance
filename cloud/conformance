@@ -122,7 +122,7 @@ fi
 
 QBO_VERSION=$(qbo version | jq -r '.version[]?.qbo_api')
 echo "QBO_VERSION=$QBO_VERSION"
-if [ -z $QBO_VERSION ]; then
+if [ -z "$QBO_VERSION" ]; then
 
     echo "Unable to get qbo version"
     exit 1;
