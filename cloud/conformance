@@ -1,7 +1,19 @@
 #!/bin/bash
-
+trap "echo; exit" INT
 shopt -s expand_aliases
 . ../qbot.sh
+
+
+exit_on_error() {
+    exit_code=$1
+    last_command=${@:2}
+    if [ $exit_code -ne 0 ]; then
+        >&2 echo "\"${last_command}\" command failed with exit code ${exit_code}."
+        exit $exit_code
+    fi
+}
+
+
 
 # sonobuoy binary path
 SONOBUOY=$HOME/sonobuoy/sonobuoy
@@ -131,6 +143,7 @@ fi
 #exit 0
 # BEGIN run conformance
 pei "$SONOBUOY run --mode=certified-conformance --wait"
+exit_on_code $?
 # END run conformance
 
 
