@@ -3,7 +3,6 @@ trap "echo; exit" INT
 shopt -s expand_aliases
 . ./qbot.sh
 
-
 exit_on_error() {
     exit_code=$1
     last_command=${@:2}
@@ -13,13 +12,18 @@ exit_on_error() {
     fi
 }
 
-
-
-# sonobuoy binary path
+# SONOBUOY
 SONOBUOY=$HOME/sonobuoy/sonobuoy
 SONOBUOY_DIR=$HOME/sonobuoy/
+SONOBUOY_OUTPUT_DIR=$HOME/sonobuoy
+
+# PRODUCT
 PROD_NAME=qbo
-OUTPUT_DIR=$HOME/sonobuoy
+DOCUMENTATION_URL=https://docs.qbo.io
+WEBSITE_URL=https://www.qbo.io
+REPO_URL=https://github.com/alexeadem/qbo-docs
+PRODUCT_LOGO_URL=https://raw.githubusercontent.com/alexeadem/qbo-docs/main/docs/img/qbo_250x150.svg
+#
 
 DEMO_PROMPT="\e[0;38;5;231;48;5;31;1m\] qbot \e[0;38;5;31;48;22m\]\e[0m "
 
@@ -88,8 +92,16 @@ pei "qbo add cluster $NAME -i hub.docker.com/kindest/node:$TAG | jq"
 pei "qbo version | jq .version[]?"
 pei "qbo get nodes $NAME | jq '.nodes[]?'"
 V=$(qbo version | jq -r '.version[]?.qbo_api | select( . != null)' | cut -d '-' -f1)
-if [ "$V" = "home" ]; then
+if [ "$V" = "ce" ]; then
         pei "export KUBECONFIG=/tmp/qbo/$NAME.conf"
+		# PRODUCT
+		PROD_NAME=qbo-ce
+		DOCUMENTATION_URL=https://ce.qbo.io
+		WEBSITE_URL=https://ce.qbo.io
+		REPO_URL=https://github.com/alexeadem/qbo-ce
+		PRODUCT_LOGO_URL=https://raw.githubusercontent.com/alexeadem/qbo-ce/main/docs/img/qbo_250x150.svg
+		#
+
 else
         pei "qbo get cluster $NAME -k | jq -r '.output[]?.kubeconfig | select( . != null)' > $HOME/.qbo/$NAME.conf"
         pei "export KUBECONFIG=$HOME/.qbo/$NAME.conf"
@@ -114,7 +126,7 @@ cd $SONOBUOY_DIR
 # BEGIN sonobuoy bin
 
 if [ -f "$SONOBUOY" ] && [ -x :"$SONOBUOY" ]; then 
-	if [ "$V" = "home" ]; then
+	if [ "$V" = "ce" ]; then
 		pei "$SONOBUOY version --kubeconfig /tmp/qbo/$NAME.conf"
 	else	
 		pei "$SONOBUOY version --kubeconfig $HOME/.qbo/$NAME.conf"
@@ -122,7 +134,7 @@ if [ -f "$SONOBUOY" ] && [ -x :"$SONOBUOY" ]; then
 else
 	pei "curl -O -L  https://github.com/vmware-tanzu/sonobuoy/releases/download/v0.56.16/sonobuoy_0.56.16_linux_amd64.tar.gz"
 	pei "tar -xvzf sonobuoy_0.56.16_linux_amd64.tar.gz"
-	if [ "$V" = "home" ]; then
+	if [ "$V" = "ce" ]; then
                 pei "$SONOBUOY version --kubeconfig /tmp/qbo/$NAME.conf"
         else    
                 pei "$SONOBUOY version --kubeconfig $HOME/.qbo/$NAME.conf"
@@ -165,30 +177,30 @@ exit_on_code $?
 OUTFILE=$($SONOBUOY retrieve)
 pei "mkdir ./results; tar xzf $OUTFILE -C ./results"
 
-if [ ! -d  ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/ ]; then
+if [ ! -d  ${SONOBUOY_OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/ ]; then
     pei "mkdir -p ./${K8S_VERSION}/${PROD_NAME}"
 fi
-pei "cp ./results/plugins/e2e/results/global/* ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/"
+pei "cp ./results/plugins/e2e/results/global/* ${SONOBUOY_OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/"
 # END results
 
 # BEGIN docs
-cat << EOF > ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/PRODUCT.yaml
+cat << EOF > ${SONOBUOY_OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/PRODUCT.yaml
 vendor: QBO LLC
-name: $PROD_NAME cloud
+name: $PROD_NAME
 version: $QBO_VERSION
-website_url: https://www.qbo.io
-repo_url: https://github.com/alexeadem/qbo-home
-documentation_url: https://docs.qbo.io
-product_logo_url: https://raw.githubusercontent.com/alexeadem/qbo-home/master/qbo_250x150.svg
+website_url: $WEBSITE_URL
+repo_url: $REPO_URL
+documentation_url: $DOCUMENTATION_URL
+product_logo_url: $PRODUCT_LOGO_URL
 type: distribution
-description: "Qbo is a pure containerized Kubernetes distribution delivering metal performance with zero virtualization. It brings a faster and simplified cloud experience for anyone, anywhere."
+description: "Qbo stands out as the exclusive AsyncAPI leveraging Docker in Docker (DinD) technology, dedicated to deploying and managing AI workloads in Kubernetes with unmatched metal performance. Unlocking the power of cloud computing for anyone, anywhere."
 contact_email_address: info@qbo.io
 EOF
 
 cd -
-cat README.md > ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/README.md
+cat README.md > ${SONOBUOY_OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/README.md
 # END docs
 
-pei "cat ${OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/e2e.log | grep Pass"
+pei "cat ${SONOBUOY_OUTPUT_DIR}/${K8S_VERSION}/${PROD_NAME}/e2e.log | grep Pass"
 
 p ""
