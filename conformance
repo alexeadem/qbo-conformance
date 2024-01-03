@@ -1,7 +1,7 @@
 #!/bin/bash
 trap "echo; exit" INT
 shopt -s expand_aliases
-. ../qbot.sh
+. ./qbot.sh
 
 
 exit_on_error() {
@@ -87,9 +87,15 @@ pei "qbo add cluster $NAME -i hub.docker.com/kindest/node:$TAG | jq"
 # BEGIN kubeconfig
 pei "qbo version | jq .version[]?"
 pei "qbo get nodes $NAME | jq '.nodes[]?'"
-pei "qbo get cluster $NAME -k | jq -r '.output[]?.kubeconfig | select( . != null)' > $HOME/.qbo/$NAME.cfg"
-pei "export KUBECONFIG=$HOME/.qbo/$NAME.cfg"
+V=$(qbo version | jq -r '.version[]?.qbo_api | select( . != null)' | cut -d '-' -f1)
+if [ "$V" = "home" ]; then
+        pei "export KUBECONFIG=/tmp/qbo/$NAME.conf"
+else
+        pei "qbo get cluster $NAME -k | jq -r '.output[]?.kubeconfig | select( . != null)' > $HOME/.qbo/$NAME.conf"
+        pei "export KUBECONFIG=$HOME/.qbo/$NAME.conf"
+fi
 pei "kubectl get nodes"
+
 # END kubeconfig
 #exit 0
 # BEGIN sonobuoy git
@@ -108,11 +114,19 @@ cd $SONOBUOY_DIR
 # BEGIN sonobuoy bin
 
 if [ -f "$SONOBUOY" ] && [ -x :"$SONOBUOY" ]; then 
-	pei "$SONOBUOY version --kubeconfig $HOME/.qbo/$NAME.cfg"
+	if [ "$V" = "home" ]; then
+		pei "$SONOBUOY version --kubeconfig /tmp/qbo/$NAME.conf"
+	else	
+		pei "$SONOBUOY version --kubeconfig $HOME/.qbo/$NAME.conf"
+	fi
 else
 	pei "curl -O -L  https://github.com/vmware-tanzu/sonobuoy/releases/download/v0.56.16/sonobuoy_0.56.16_linux_amd64.tar.gz"
 	pei "tar -xvzf sonobuoy_0.56.16_linux_amd64.tar.gz"
-	pei "$SONOBUOY version --kubeconfig $HOME/.qbo/$NAME.cfg"
+	if [ "$V" = "home" ]; then
+                pei "$SONOBUOY version --kubeconfig /tmp/qbo/$NAME.conf"
+        else    
+                pei "$SONOBUOY version --kubeconfig $HOME/.qbo/$NAME.conf"
+        fi
 fi
 # END sonobuoy bin
 
