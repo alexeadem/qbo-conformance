@@ -1,31 +1,42 @@
-# CNCF conformance for `Qbo` Cloud and Home (CE)
+# Qbo CNCF Conformance (Cloud and Community Edition)
 
-## Run conformance tests from `Qbo` web console
-### Requirements
+his portion provides guidance on conducting CNCF [conformance](https://www.cncf.io/certification/software-conformance/) tests for the qbo application. The testing process utilizes a diagnostic tool named [sonobuoy](https://github.com/vmware-tanzu/sonobuoy).
+
+## Requirements
 ---
-> * Chrome or Firefox browser
-> * Email authenticated by Google (Google Account)
+* Chrome or Firefox Web Browser
 
-### Request access to `Qbo` Cloud
+## Console Access
+### Qbo Cloud
+> To obtain access to qbo cloud, please follow these steps:
+> 
+> Request access by emailing support@qbo.io. In your request, include a Google email address that you intend to use for authentication in qbo cloud.
+>
+> Upon receiving email confirmation, proceed to log in to the qbo console at:
+> 
+> https://console.cloud.qbo.io
+
+### Qbo CE
+> To access the qbo web console, follow these steps:
+>
+> Execute the following commands in your terminal
+```bash
+QBO_API=$(docker inspect qbo | jq -r .[].NetworkSettings.Networks.bridge.IPAddress)
+echo http://$QBO_API:9601
+```
+
+> Open your web browser and navigate to the address displayed in the output of the commands.
+
+## Conformance Tests
 ---
-> Email `support@qbo.io` and provide a google email in your request that you'll use to authenticate in Qbo Cloud.
+> The execution of conformance tests involves running the `conformance` script, assisted by a typing bot named `qbot` that automates command input. Alternatively, you have the option to manually enter the commands in the shell.
 
-### Login to the `Qbo` console
----
-> Once you receive an email confirmation you can login to:
+The `conformance` script is designed to execute the following actions:
 
-https://console.cloud.qbo.io
-
-### Run conformance test
----
-> Conformance tests are run with `conformance`. It uses a typing bot that will type the commands for you. Alternatively you can type the command yourself in the shell
-
-
-`conformance` will perform the following tasks:
-* Create a `qbo` cluster
-* Configure `kubectl`
-* Download and configure `sonobuoy` 
-* Run confomance test on the version entered.
+* Creation of a `qbo` cluster
+* Configuration of `kubectl`
+* Retrieval and setup of `sonobuoy`
+* Execution of conformance tests on the specified version.
 
 Usage:
 
@@ -33,7 +44,7 @@ Usage:
 ./conformance help
 >>> ./conformance help                 -- Show usage
 >>> ./conformance list                 -- List available Kubernetes image tags
->>> ./conformance run {tag}    -- Run CNCF conformance results for qbo
+>>> ./conformance run {tag}            -- Run CNCF conformance results for qbo
 ```
 
 List available Kubernetes tags:
@@ -45,9 +56,17 @@ Select version and run conformance test. Example:
 ```bash
 ./conformance run v1.28.0
 ```
-### Get test results
+## Conformance Results
 ---
 ```bash
-cat /tmp/qbo/sonobuoy/v1.28.0/qbo/e2e.log | grep Pass
+cat $HOME/sonobuoy/v1.28.0/qbo/e2e.log | grep Pass
 ```
-> For more information visit: https://docs.qbo.io/
+
+# For more information visit: 
+> 
+> [QBO CLOUD DOCS](https://ce.qbo.io/)
+>
+> [QBO CE DOCS](https://ce.qbo.io/)
+>
+> [CERTIFIED KUBERNETES SOFTWARE CONFORMANCE](https://www.cncf.io/certification/software-conformance/)
+
