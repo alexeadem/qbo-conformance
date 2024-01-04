@@ -159,7 +159,7 @@ if [ -z $K8S_VERSION ]; then
     exit 1;
 fi
 
-QBO_VERSION=$(qbo version | jq -r '.version[]?.qbo_api')
+QBO_VERSION=$(qbo version | jq -r '.version[]?.qbo_api | select ( . != null )')
 echo "QBO_VERSION=$QBO_VERSION"
 if [ -z "$QBO_VERSION" ]; then
 
